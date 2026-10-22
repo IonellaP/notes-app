@@ -4,10 +4,10 @@ import { Pool } from 'pg';
 @Injectable()
 export class DbService {
   private pool = new Pool({
-    host: 'db',
-    user: 'postgres',
-    password: 'postgres',
-    database: 'notes',
+    process.env.DB_HOST
+    process.env.DB_USER   
+    process.env.DB_PASSWORD 
+    process.env.DB_NAME
   });
 
   query(sql: string, params: unknown[] = []) {

@@ -2,11 +2,10 @@ services:
   db:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: notes
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
     volumes:
       - db-data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -15,15 +14,17 @@ services:
     build: ./backend
     depends_on:
       - db
-    ports:
-      - "3000:3000"
+ 
+    env_file: .env
+    environment:
+      DB_HOST: db
 
   web:
     build: ./frontend
     depends_on:
       - api
     ports:
-      - "8080:80"
+      - "8090:80"
 
 volumes:
   db-data:
