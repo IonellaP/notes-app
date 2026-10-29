@@ -14,25 +14,38 @@ import {
 import { AuthGuard } from './auth';
 import { DbService } from './db.service';
 
+
 @Controller('notes')
 @UseGuards(AuthGuard)
 export class NotesController {
   constructor(private db: DbService) {}
 
+ 
   // Notițele mele, cu căutare după titlu
   @Get()
   async list(@Req() req, @Query('search') search = '') {
+    if (typeof search !== 'string' || search.length > 100) {
+      throw new BadRequestException(
+        'Cautarea nu poate depasi 100 de caractere',
+      );
+    }
+
     try {
       const result = await this.db.query(
-        `SELECT id, title, content, is_public, created_at FROM notes
-         WHERE user_id = ${req.user.sub} AND title ILIKE '%${search}%'
+        `SELECT id, title, content, is_public, created_at
+         FROM notes
+         WHERE user_id = $1 AND title ILIKE $2
          ORDER BY id DESC`,
+        [req.user.sub, `%${search}%`],
       );
+
       return result.rows;
     } catch (err) {
-      throw new BadRequestException(err.message);
+      // Erorile neașteptate nu trebuie prezentate ca HTTP 400.
+      throw err;
     }
   }
+
 
   // Notițele publice ale tuturor utilizatorilor
   @Get('public')

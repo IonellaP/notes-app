@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from './api';
+import DOMPurify from 'dompurify';
 
 export default function App() {
   const [user, setUser] = useState(localStorage.getItem('username'));
@@ -112,8 +113,17 @@ function Notes({ onAuthError }) {
         <article className="card" key={note.id}>
           <h3>{note.title}</h3>
           {note.username && <small>de {note.username}</small>}
-          {/* Permitem formatare HTML în notițe (bold, italic...) */}
-          <div dangerouslySetInnerHTML={{ __html: note.content }} />
+
+          {/* Permitem numai tag-urile HTML autorizate in varianta 10 */}
+          <div
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(note.content, {
+                ALLOWED_TAGS: ['strong', 'em', 'ul', 'li'],
+                ALLOWED_ATTR: [],
+              }),
+            }}
+          />
+
           {tab === 'mine' && <button onClick={() => remove(note.id)}>Șterge</button>}
         </article>
       ))}
@@ -139,8 +149,11 @@ function NewNote({ onCreated }) {
     <form className="card" onSubmit={submit}>
       <h2>Notiță nouă</h2>
       <input placeholder="Titlu" value={title} onChange={(e) => setTitle(e.target.value)} />
-      <textarea placeholder="Conținut (poți folosi <b>, <i>)" value={content} onChange={(e) => setContent(e.target.value)} />
-      <label>
+      <textarea
+        placeholder="Conținut (poți folosi <strong>, <em>, <ul>, <li>)"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+      />      <label>
         <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} /> Publică (o văd toți)
       </label>
       <button type="submit">Salvează</button>
